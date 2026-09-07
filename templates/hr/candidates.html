@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Candidates — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('hr.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('hr.create_job_route') }}">New Job</a>
+      <a href="{{ url_for('hr.view_jobs') }}">Jobs</a>
+      <a href="{{ url_for('hr.candidates') }}">Candidates</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>All Candidates</h1>
+  </div>
+
+  <!-- Filters -->
+  <form method="GET" class="filter-bar">
+    <select name="job">
+      <option value="">All Positions</option>
+      {% for job in jobs %}
+      <option value="{{ job.id }}" {% if job_filter == job.id|string %}selected{% endif %}>
+        {{ job.title }}{% if job.is_closed %} (Closed){% endif %}
+      </option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">All Statuses</option>
+      <option value="Under Review" {% if status_filter=='Under Review' %}selected{% endif %}>Under Review</option>
+      <option value="Shortlisted"  {% if status_filter=='Shortlisted'  %}selected{% endif %}>Shortlisted</option>
+      <option value="Interview"    {% if status_filter=='Interview'    %}selected{% endif %}>Interview</option>
+      <option value="Rejected"     {% if status_filter=='Rejected'     %}selected{% endif %}>Rejected</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <a href="{{ url_for('hr.candidates') }}" class="btn btn-secondary">Clear</a>
+  </form>
+
+  {% if apps %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Candidate</th><th>Position</th>
+          <th>Status</th><th>Applied</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for app in apps %}
+      <tr>
+        <td style="color:var(--gray-500);">{{ loop.index }}</td>
+        <td><strong>{{ app.parsed_name or app.candidate_name }}</strong><br>
+          <span style="font-size:.8rem;color:var(--gray-500);">{{ app.parsed_email or '' }}</span>
+        </td>
+        <td>{{ app.job_title }}</td>
+        <td><span class="badge badge-{{ app.status|lower|replace(' ','-') }}">{{ app.status }}</span></td>
+        <td>{{ app.applied_at[:10] }}</td>
+        <td><a href="{{ url_for('hr.candidate_detail', id=app.id) }}" class="btn btn-sm btn-primary">Review</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No candidates match the selected filters.</div>
+  {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Submit Application — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('candidate.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('candidate.upload') }}">Apply</a>
+      <a href="{{ url_for('candidate.status') }}">My Applications</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="max-width:580px;">
+  <a href="{{ url_for('candidate.dashboard') }}" class="back-link">&#8592; Dashboard</a>
+  <div class="page-header"><h1>Submit Application</h1></div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <form method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="job_id">Position <span class="req">*</span></label>
+        <select id="job_id" name="job_id" required>
+          <option value="">— Select a position —</option>
+          {% for job in jobs %}
+          <option value="{{ job.id }}" {% if request.args.get('job')==job.id|string %}selected{% endif %}>
+            {{ job.title }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="resume">Resume <span class="req">*</span></label>
+        <input type="file" id="resume" name="resume" accept=".pdf,.docx" required>
+        <small>PDF or DOCX, maximum 5 MB.</small>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success">Submit Application</button>
+        <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

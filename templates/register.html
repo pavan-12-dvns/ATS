@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Account — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card" style="max-width:480px;">
+      <h1>TalentTrack ATS</h1>
+      <p class="auth-sub">Create a new account</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }}">{{ msg }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" id="regForm">
+        <div class="form-group">
+          <label>Account type</label>
+          <div class="role-selector">
+            <label class="role-option">
+              <input type="radio" name="role" value="hr" required onchange="toggleCompany()">
+              <span>HR / Recruiter</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" name="role" value="candidate" onchange="toggleCompany()">
+              <span>Job Applicant</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="rname">Full Name</label>
+          <input type="text" id="rname" name="name" required autocomplete="name">
+        </div>
+
+        <div class="form-group" id="companyField" style="display:none">
+          <label for="rco">Company Name</label>
+          <input type="text" id="rco" name="company" autocomplete="organization">
+        </div>
+
+        <div class="form-group">
+          <label for="remail">Email address</label>
+          <input type="email" id="remail" name="email" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="rpw">Password</label>
+          <div class="input-with-toggle">
+            <input type="password" id="rpw" name="password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="toggle-pw" onclick="togglePw('rpw')">&#128065;</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="rpw2">Confirm Password</label>
+          <div class="input-with-toggle">
+            <input type="password" id="rpw2" name="confirm_password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="toggle-pw" onclick="togglePw('rpw2')">&#128065;</button>
+          </div>
+          <small id="pwMsg" style="color:#6e1a1a;display:none;">Passwords do not match.</small>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block" id="subBtn">Create Account</button>
+      </form>
+
+      <p class="auth-footer">
+        Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a>
+        &nbsp;·&nbsp;
+        <a href="{{ url_for('landing') }}">Home</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+  function togglePw(id){var f=document.getElementById(id);f.type=f.type==='password'?'text':'password';}
+  function toggleCompany(){
+    var r=document.querySelector('input[name="role"]:checked');
+    var f=document.getElementById('companyField');
+    var i=document.getElementById('rco');
+    if(r&&r.value==='hr'){f.style.display='block';i.required=true;}
+    else{f.style.display='none';i.required=false;}
+  }
+  document.getElementById('rpw2').addEventListener('input',function(){
+    var m=document.getElementById('pwMsg');
+    m.style.display=(this.value&&this.value!==document.getElementById('rpw').value)?'block':'none';
+  });
+  document.getElementById('regForm').addEventListener('submit',function(e){
+    if(document.getElementById('rpw').value!==document.getElementById('rpw2').value){
+      e.preventDefault();
+      document.getElementById('pwMsg').style.display='block';
+    }
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Job — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('hr.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('hr.create_job_route') }}">New Job</a>
+      <a href="{{ url_for('hr.view_jobs') }}">Jobs</a>
+      <a href="{{ url_for('hr.candidates') }}">Candidates</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <a href="{{ url_for('hr.dashboard') }}" class="back-link">&#8592; Dashboard</a>
+  <div class="page-header"><h1>Create Job Posting</h1></div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <form method="POST" id="jobForm">
+
+      <!-- Template loader -->
+      <div class="form-group" style="max-width:340px;">
+        <label>Load from Template</label>
+        <select id="tplSelect" onchange="loadTemplate()">
+          <option value="">— Select a template —</option>
+          {% for t in templates %}
+          <option value="{{ t.id }}">{{ t.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-row">
+        <!-- Left col: job details -->
+        <div>
+          <div class="form-group">
+            <label for="jobTitle">Job Title <span class="req">*</span></label>
+            <input type="text" id="jobTitle" name="title" required placeholder="e.g. Backend Developer">
+          </div>
+
+          <div class="form-group">
+            <label>Mandatory Skills <span class="req">*</span></label>
+            <input type="text" id="skillSearch" placeholder="Filter skills…"
+              oninput="filterSkills(this.value)"
+              style="margin-bottom:4px;">
+            <div class="skill-dropdown" id="skillDropdown">
+              {% for skill in skills %}
+              <label class="skill-item">
+                <input type="checkbox" class="skill-cb" value="{{ skill }}" onchange="syncCbToText()">
+                <span>{{ skill }}</span>
+              </label>
+              {% endfor %}
+            </div>
+            <input type="text" id="mandatorySkillsTxt" name="mandatory_skills"
+              placeholder="e.g. python, react, sql"
+              oninput="syncTextToCb(this.value)"
+              style="margin-top:6px;">
+            <small>Check from list or type comma-separated values.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Optional Skills</label>
+            <input type="text" name="optional_skills" placeholder="e.g. docker, terraform">
+          </div>
+
+          <div class="form-group" style="max-width:200px;">
+            <label>Minimum Experience (years)</label>
+            <input type="number" id="minExp" name="min_experience" min="0" value="0" required>
+          </div>
+
+          <div class="form-group">
+            <label>Required Education <small>(comma-separated levels)</small></label>
+            <input type="text" id="reqEdu" name="required_education" value="Bachelor,Master,PhD" required>
+          </div>
+        </div>
+
+        <!-- Right col: weights -->
+        <div>
+          <div class="form-group">
+            <label>Skills Weight (%)</label>
+            <input type="number" id="wSkill" name="skill_weight" min="0" max="100" value="40" required onchange="updateTotal()">
+          </div>
+          <div class="form-group">
+            <label>Experience Weight (%)</label>
+            <input type="number" id="wExp" name="experience_weight" min="0" max="100" value="30" required onchange="updateTotal()">
+          </div>
+          <div class="form-group">
+            <label>Education Weight (%)</label>
+            <input type="number" id="wEdu" name="education_weight" min="0" max="100" value="30" required onchange="updateTotal()">
+          </div>
+          <div class="weight-display">
+            <span>Total</span>
+            <span class="wt-num wt-ok" id="wtDisplay">100%</span>
+          </div>
+          <div class="alert alert-warning" style="margin-top:.75rem;">
+            Weights must sum to 100% and are locked after creation.
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success">Create Job Posting</button>
+        <a href="{{ url_for('hr.dashboard') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function updateTotal(){
+  var s=parseInt(document.getElementById('wSkill').value)||0;
+  var e=parseInt(document.getElementById('wExp').value)||0;
+  var d=parseInt(document.getElementById('wEdu').value)||0;
+  var t=s+e+d;
+  var el=document.getElementById('wtDisplay');
+  el.textContent=t+'%';
+  el.className='wt-num '+(t===100?'wt-ok':'wt-error');
+}
+function syncCbToText(){
+  var vals=Array.from(document.querySelectorAll('.skill-cb:checked')).map(c=>c.value);
+  document.getElementById('mandatorySkillsTxt').value=vals.join(', ');
+}
+function syncTextToCb(txt){
+  var parts=txt.split(',').map(s=>s.trim().toLowerCase());
+  document.querySelectorAll('.skill-cb').forEach(cb=>{
+    cb.checked=parts.includes(cb.value.toLowerCase());
+  });
+}
+function filterSkills(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('.skill-item').forEach(el=>{
+    el.style.display=el.textContent.toLowerCase().includes(q)?'flex':'none';
+  });
+}
+function loadTemplate(){
+  var id=document.getElementById('tplSelect').value;
+  if(!id)return;
+  fetch('/hr/job-templates/'+id)
+    .then(r=>r.json())
+    .then(t=>{
+      document.getElementById('jobTitle').value=t.title||'';
+      document.getElementById('mandatorySkillsTxt').value=t.mandatory_skills||'';
+      document.getElementById('minExp').value=t.min_experience||0;
+      document.getElementById('reqEdu').value=t.required_education||'';
+      document.getElementById('wSkill').value=t.weight_skills||40;
+      document.getElementById('wExp').value=t.weight_experience||30;
+      document.getElementById('wEdu').value=t.weight_education||30;
+      syncTextToCb(t.mandatory_skills||'');
+      updateTotal();
+    }).catch(()=>{});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('hr.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('hr.create_job_route') }}">New Job</a>
+      <a href="{{ url_for('hr.view_jobs') }}">Jobs</a>
+      <a href="{{ url_for('hr.candidates') }}">Candidates</a>
+      <a href="{{ url_for('hr.settings') }}">Settings</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Welcome, {{ session.name }}</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <!-- Metrics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.total_jobs }}</div>
+      <div class="stat-label">Active Jobs</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.total }}</div>
+      <div class="stat-label">Applications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.under_review }}</div>
+      <div class="stat-label">Under Review</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.shortlisted }}</div>
+      <div class="stat-label">Shortlisted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ stats.rejected }}</div>
+      <div class="stat-label">Rejected</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;">
+    <a href="{{ url_for('hr.create_job_route') }}" class="btn btn-primary">+ Create Job Posting</a>
+    <a href="{{ url_for('hr.candidates') }}" class="btn btn-secondary">View All Candidates</a>
+  </div>
+
+  <!-- Recent applications — NO ATS score column -->
+  {% if recent %}
+  <div class="card">
+    <div class="card-header">Recent Applications</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Position</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for app in recent %}
+      <tr>
+        <td><strong>{{ app.parsed_name or app.candidate_name }}</strong></td>
+        <td>{{ app.job_title }}</td>
+        <td><span class="badge badge-{{ app.status|lower|replace(' ','-') }}">{{ app.status }}</span></td>
+        <td>{{ app.applied_at[:10] }}</td>
+        <td><a href="{{ url_for('hr.candidate_detail', id=app.id) }}" class="btn btn-sm btn-primary">Review</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No applications yet. Create a job posting to get started.</div>
+  {% endif %}
+</div>
+</body>
+</html>

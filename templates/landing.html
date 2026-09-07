@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="ats-title">
+    Applicant Tracking System
+  </header>
+  <div class="landing-wrap">
+    <div class="landing-card">
+      <h1>TalentTrack ATS</h1>
+      <p>Applicant Tracking System — sign in to continue.</p>
+      <div class="landing-btns">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-block">Sign In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-secondary btn-block">Create Account</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

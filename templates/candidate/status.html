@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Application Status — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('candidate.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('candidate.upload') }}">Apply</a>
+      <a href="{{ url_for('candidate.status') }}">My Applications</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header"><h1>Application Status</h1></div>
+
+  {% if apps %}
+  {% for app in apps %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
+      <div>
+        <h3 style="margin-bottom:.2rem;">{{ app.job_title }}</h3>
+        <span style="font-size:.825rem;color:var(--gray-500);">Applied {{ app.applied_at[:10] }}</span>
+      </div>
+      <span class="badge badge-{{ app.status|lower|replace(' ','-') }}" style="font-size:.875rem;padding:.3rem .9rem;">
+        {{ app.status }}
+      </span>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline">
+      {% set st = app.status %}
+      <div class="tl-step done">
+        <div class="tl-dot">&#10003;</div>
+        <div class="tl-label">Submitted</div>
+      </div>
+      <div class="tl-step {{ 'done' if st in ('Under Review','Shortlisted','Interview') else ('error' if st=='Rejected' else '') }}">
+        <div class="tl-dot">
+          {% if st in ('Under Review','Shortlisted','Interview') %}&#10003;
+          {% elif st == 'Rejected' %}&#215;
+          {% else %}–{% endif %}
+        </div>
+        <div class="tl-label">Under Review</div>
+      </div>
+      <div class="tl-step {{ 'done' if st in ('Shortlisted','Interview') else '' }}">
+        <div class="tl-dot">{% if st in ('Shortlisted','Interview') %}&#10003;{% else %}–{% endif %}</div>
+        <div class="tl-label">Shortlisted</div>
+      </div>
+      <div class="tl-step {{ 'done' if st == 'Interview' else '' }}">
+        <div class="tl-dot">{% if st == 'Interview' %}&#10003;{% else %}–{% endif %}</div>
+        <div class="tl-label">Interview</div>
+      </div>
+    </div>
+
+    {% if st in ('Shortlisted','Interview') and app.feedback %}
+    <div class="alert alert-info" style="margin-top:.75rem;">
+      <strong>Recruiter note:</strong> {{ app.feedback }}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="empty-state">
+    <p>You have not submitted any applications yet.</p>
+    <a href="{{ url_for('candidate.upload') }}" class="btn btn-primary" style="margin-top:.75rem;">Apply Now</a>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Candidate Review — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('hr.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('hr.candidates') }}">Candidates</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <a href="{{ url_for('hr.candidates') }}" class="back-link">&#8592; Back to Candidates</a>
+
+  <div class="page-header">
+    <h1>{{ app.parsed_name or app.candidate_name }}</h1>
+    <p>Applying for: <strong>{{ app.job_title }}</strong></p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  {% if app.status == 'Rejected' and app.rejection_reason %}
+  <div class="alert alert-danger">
+    <strong>Auto-Rejected:</strong> {{ app.rejection_reason }}
+    — You may override the status below.
+  </div>
+  {% endif %}
+
+  <div class="detail-grid">
+    <!-- Main column -->
+    <div>
+
+      <div class="card">
+        <div class="card-header">Contact Information</div>
+        <table class="kv-table">
+          <tr><td>Email</td><td>{{ app.parsed_email or app.candidate_email or '—' }}</td></tr>
+          <tr><td>Phone</td><td>{{ app.parsed_phone or '—' }}</td></tr>
+          <tr><td>Applied</td><td>{{ app.applied_at[:10] }}</td></tr>
+          <tr><td>Experience</td><td>{{ app.parsed_experience or 0 }} years</td></tr>
+          <tr><td>Education</td><td>{{ app.parsed_education or '—' }}</td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Screening Score Breakdown</div>
+        <table class="score-table">
+          <tr>
+            <td>Skills Match</td>
+            <td class="score-val">{{ "%.0f"|format(app.skill_score or 0) }}%</td>
+          </tr>
+          <tr>
+            <td>Experience</td>
+            <td class="score-val">{{ "%.0f"|format(app.experience_score or 0) }}%</td>
+          </tr>
+          <tr>
+            <td>Education</td>
+            <td class="score-val">{{ "%.0f"|format(app.education_score or 0) }}%</td>
+          </tr>
+          <tr style="border-top:1px solid var(--gray-200);">
+            <td><strong>Weighted Total</strong></td>
+            <td class="score-val"><strong>{{ "%.0f"|format(app.weighted_total or 0) }}%</strong></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Skill Analysis</div>
+        <div style="margin-bottom:.75rem;">
+          <div class="section-title">Matched Skills</div>
+          {% if app.matched_skills %}
+            {% for s in app.matched_skills.split(',') %}
+              {% if s.strip() %}<span class="skill-pill">{{ s.strip() }}</span>{% endif %}
+            {% endfor %}
+          {% else %}<span style="color:var(--gray-500);font-size:.875rem;">None</span>{% endif %}
+        </div>
+        <div style="margin-bottom:.75rem;">
+          <div class="section-title">Missing Skills</div>
+          {% if app.missing_skills %}
+            {% for s in app.missing_skills.split(',') %}
+              {% if s.strip() %}<span class="skill-pill skill-pill-miss">{{ s.strip() }}</span>{% endif %}
+            {% endfor %}
+          {% else %}<span style="color:var(--gray-500);font-size:.875rem;">None</span>{% endif %}
+        </div>
+        <div>
+          <div class="section-title">All Parsed Skills</div>
+          <span style="font-size:.875rem;color:var(--gray-700);">{{ app.parsed_skills or '—' }}</span>
+        </div>
+      </div>
+
+      {% if app.score_explanation %}
+      <div class="alert alert-warning">
+        <strong>Screening Notes:</strong> {{ app.score_explanation }}
+      </div>
+      {% endif %}
+
+      {% if app.feedback %}
+      <div class="alert alert-info">
+        <strong>HR Note:</strong> {{ app.feedback }}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+      <div class="card">
+        <div class="card-header">Current Status</div>
+        <div style="text-align:center;padding:.5rem 0;">
+          <span class="badge badge-{{ app.status|lower|replace(' ','-') }}" style="font-size:.9rem;padding:.35rem 1rem;">
+            {{ app.status }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Update Status</div>
+        <form method="POST" action="{{ url_for('hr.update_status', id=app.id) }}">
+          <div class="form-group">
+            <label>New Status</label>
+            <select name="status" required>
+              <option value="Under Review" {% if app.status=='Under Review' %}selected{% endif %}>Under Review</option>
+              <option value="Shortlisted"  {% if app.status=='Shortlisted'  %}selected{% endif %}>Shortlisted</option>
+              <option value="Interview"    {% if app.status=='Interview'    %}selected{% endif %}>Interview</option>
+              <option value="Rejected"     {% if app.status=='Rejected'     %}selected{% endif %}>Rejected</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notes / Feedback</label>
+            <textarea name="feedback" rows="4" placeholder="Optional notes...">{{ app.feedback or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Save Status</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

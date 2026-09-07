@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Dashboard — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('candidate.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('candidate.upload') }}">Apply</a>
+      <a href="{{ url_for('candidate.status') }}">My Applications</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Welcome, {{ session.name }}</h1>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;">
+    <a href="{{ url_for('candidate.upload') }}" class="btn btn-primary">+ Apply to a Position</a>
+    <a href="{{ url_for('candidate.status') }}" class="btn btn-secondary">View Application Status</a>
+  </div>
+
+  <!-- Open positions -->
+  {% if jobs %}
+  <div class="card">
+    <div class="card-header">Open Positions</div>
+    <div class="job-list">
+      {% for job in jobs %}
+      <div class="job-row">
+        <div class="job-row-info">
+          <h4>{{ job.title }}</h4>
+          <p>
+            Skills: {{ job.mandatory_skills }}
+            &nbsp;·&nbsp;
+            Min. {{ job.min_experience }} yr{{ 's' if job.min_experience != 1 }} experience
+            &nbsp;·&nbsp;
+            {{ job.required_education or 'Any education' }}
+          </p>
+        </div>
+        <a href="{{ url_for('candidate.upload') }}?job={{ job.id }}" class="btn btn-primary btn-sm">Apply</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">No open positions at this time.</div>
+  {% endif %}
+
+  <!-- My recent applications -->
+  {% if apps %}
+  <div class="card">
+    <div class="card-header">My Applications</div>
+    <table>
+      <thead>
+        <tr><th>Position</th><th>Status</th><th>Applied</th></tr>
+      </thead>
+      <tbody>
+      {% for app in apps %}
+      <tr>
+        <td><strong>{{ app.job_title }}</strong></td>
+        <td><span class="badge badge-{{ app.status|lower|replace(' ','-') }}">{{ app.status }}</span></td>
+        <td>{{ app.applied_at[:10] }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

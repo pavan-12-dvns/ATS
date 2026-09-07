@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Job Postings — TalentTrack ATS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-container">
+    <span class="nav-brand">TalentTrack ATS</span>
+    <div class="nav-menu">
+      <a href="{{ url_for('hr.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('hr.create_job_route') }}">New Job</a>
+      <a href="{{ url_for('hr.view_jobs') }}">Jobs</a>
+      <a href="{{ url_for('hr.candidates') }}">Candidates</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+    <div>
+      <h1>Job Postings</h1>
+    </div>
+    <a href="{{ url_for('hr.create_job_route') }}" class="btn btn-primary">+ New Job</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  {% if jobs %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Title</th><th>Required Skills</th>
+          <th>Exp.</th><th>Education</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td style="color:var(--gray-500);">{{ loop.index }}</td>
+        <td><strong>{{ job.title }}</strong></td>
+        <td style="font-size:.825rem;max-width:200px;">{{ job.mandatory_skills or '—' }}</td>
+        <td>{{ job.min_experience or 0 }} yr{{ 's' if (job.min_experience or 0)!=1 }}</td>
+        <td>{{ job.required_education or '—' }}</td>
+        <td>
+          {% if job.is_closed %}
+            <span class="badge badge-closed">Closed</span>
+          {% else %}
+            <span class="badge badge-open">Open</span>
+          {% endif %}
+        </td>
+        <td style="white-space:nowrap;">
+          {% if not job.is_closed %}
+          <a href="{{ url_for('hr.edit_job', job_id=job.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+          <form method="POST" action="{{ url_for('hr.close_job_route', job_id=job.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-secondary"
+              onclick="return confirm('Close this job? No new applications will be accepted.')">Close</button>
+          </form>
+          {% else %}
+          <span style="font-size:.8rem;color:var(--gray-500);">Locked</span>
+          {% endif %}
+          <form method="POST" action="{{ url_for('hr.remove_job', job_id=job.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-danger"
+              onclick="return confirm('Delete? If applications exist it will be closed instead.')">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No job postings yet. <a href="{{ url_for('hr.create_job_route') }}">Create one now.</a></div>
+  {% endif %}
+</div>
+</body>
+</html>
